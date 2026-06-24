@@ -1,0 +1,175 @@
+name: upnext-prod
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-common: &common
+  restart: unless-stopped
+  logging: *default-logging
+  networks:
+    - upnext-prod
+
+services:
+  frontend:
+    <<: *common
+    image: ghcr.io/${GITHUB_OWNER:?set GITHUB_OWNER}/upnext-frontend:${FRONTEND_IMAGE_TAG:-latest}
+    container_name: upnext-frontend
+    env_file:
+      - ../env/frontend.prod.env
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.75"
+          memory: 768M
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || wget -qO- http://127.0.0.1:3000/ >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+
+  backend:
+    <<: *common
+    image: ghcr.io/${GITHUB_OWNER:?set GITHUB_OWNER}/upnext-be:${BACKEND_IMAGE_TAG:-latest}
+    container_name: upnext-backend
+    env_file:
+      - ../env/backend.prod.env
+    ports:
+      - "127.0.0.1:4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.25"
+          memory: 1024M
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/health || wget -qO- http://127.0.0.1:4000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  postgres:
+    <<: *common
+    image: postgres:16-alpine
+    container_name: upnext-postgres
+    env_file:
+      - ../env/postgres.prod.env
+    volumes:
+      - postgres-prod-data:/var/lib/postgresql/data
+      - ../postgres/initdb:/docker-entrypoint-initdb.d:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "1.25"
+          memory: 1536M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  n8n:
+    <<: *common
+    image: docker.n8n.io/n8nio/n8n:${N8N_IMAGE_TAG:-latest}
+    container_name: upnext-n8n
+    env_file:
+      - ../env/n8n.env
+    ports:
+      - "127.0.0.1:5678:5678"
+    volumes:
+      - n8n-data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.60"
+          memory: 768M
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5678/healthz || wget -qO- http://127.0.0.1:5678/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  uptime-kuma:
+    <<: *common
+    image: louislam/uptime-kuma:${UPTIME_KUMA_IMAGE_TAG:-2}
+    container_name: upnext-uptime-kuma
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - uptime-kuma-data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 384M
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3001/ >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+
+  beszel:
+    <<: *common
+    image: henrygd/beszel:${BESZEL_IMAGE_TAG:-latest}
+    container_name: upnext-beszel
+    ports:
+      - "127.0.0.1:8090:8090"
+    volumes:
+      - beszel-data:/beszel_data
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: 384M
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8090/ >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+
+  beszel-agent:
+    image: henrygd/beszel-agent:${BESZEL_AGENT_IMAGE_TAG:-latest}
+    container_name: upnext-beszel-agent
+    restart: unless-stopped
+    logging: *default-logging
+    network_mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - beszel-agent-data:/var/lib/beszel-agent
+    environment:
+      PORT: "45876"
+      KEY: "${BESZEL_AGENT_KEY:?set BESZEL_AGENT_KEY in the shell or deploy env}"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: 384M
+
+volumes:
+  postgres-prod-data:
+  n8n-data:
+  uptime-kuma-data:
+  beszel-data:
+  beszel-agent-data:
+
+networks:
+  upnext-prod:
+    driver: bridge

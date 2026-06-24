@@ -1,0 +1,87 @@
+name: upnext-staging
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-common: &common
+  restart: unless-stopped
+  logging: *default-logging
+  networks:
+    - upnext-staging
+
+services:
+  frontend-staging:
+    <<: *common
+    image: ghcr.io/${GITHUB_OWNER:?set GITHUB_OWNER}/upnext-frontend:${FRONTEND_STAGING_IMAGE_TAG:-develop}
+    container_name: upnext-frontend-staging
+    env_file:
+      - ../env/frontend.staging.env
+    ports:
+      - "127.0.0.1:3100:3000"
+    depends_on:
+      backend-staging:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.75"
+          memory: 768M
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || wget -qO- http://127.0.0.1:3000/ >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+
+  backend-staging:
+    <<: *common
+    image: ghcr.io/${GITHUB_OWNER:?set GITHUB_OWNER}/upnext-be:${BACKEND_STAGING_IMAGE_TAG:-dev}
+    container_name: upnext-backend-staging
+    env_file:
+      - ../env/backend.staging.env
+    ports:
+      - "127.0.0.1:4100:4000"
+    depends_on:
+      postgres-staging:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.25"
+          memory: 1024M
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/health || wget -qO- http://127.0.0.1:4000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  postgres-staging:
+    <<: *common
+    image: postgres:16-alpine
+    container_name: upnext-postgres-staging
+    env_file:
+      - ../env/postgres.staging.env
+    volumes:
+      - postgres-staging-data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1024M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  postgres-staging-data:
+
+networks:
+  upnext-staging:
+    driver: bridge
