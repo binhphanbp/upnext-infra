@@ -39,6 +39,13 @@ if [[ "${CONFIRM_RESTORE:-}" != "$CONFIRM_VALUE" ]]; then
   exit 1
 fi
 
+if [[ -f "${ROOT_DIR}/env/deploy.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "${ROOT_DIR}/env/deploy.env"
+  set +a
+fi
+
 echo "Restoring ${BACKUP_FILE} into ${ENVIRONMENT} PostgreSQL"
 gzip -dc "$BACKUP_FILE" | docker compose -f "$COMPOSE_FILE" exec -T "$SERVICE" sh -c \
   'pg_restore --clean --if-exists --no-owner --no-privileges -U "$POSTGRES_USER" -d "$POSTGRES_DB"'

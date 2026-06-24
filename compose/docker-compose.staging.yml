@@ -30,7 +30,7 @@ services:
           cpus: "0.75"
           memory: 768M
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || wget -qO- http://127.0.0.1:3000/ >/dev/null"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -53,7 +53,7 @@ services:
           cpus: "1.25"
           memory: 1024M
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4000/health || wget -qO- http://127.0.0.1:4000/api/health"]
+      test: ["CMD-SHELL", "node -e \"const http=require('http'); const paths=['/health','/api/health']; const check=()=>{const p=paths.shift(); if(!p) process.exit(1); http.get('http://127.0.0.1:4000'+p, r=>process.exit(r.statusCode<500?0:1)).on('error', check)}; check()\""]
       interval: 30s
       timeout: 10s
       retries: 5

@@ -24,6 +24,13 @@ case "$ENVIRONMENT" in
     ;;
 esac
 
+if [[ -f "${ROOT_DIR}/env/deploy.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "${ROOT_DIR}/env/deploy.env"
+  set +a
+fi
+
 mkdir -p "$BACKUP_DIR"
 OUT_FILE="${BACKUP_DIR}/${PREFIX}-${TIMESTAMP}.dump.gz"
 

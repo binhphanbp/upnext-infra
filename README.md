@@ -11,8 +11,7 @@ This repo contains infrastructure only. It must not contain FE/BE source code, r
 2. Clone this repo on the VPS:
    ```bash
    sudo mkdir -p /opt/upnext
-   sudo chown -R deploy:deploy /opt/upnext
-   git clone <INFRA_REPO_URL> /opt/upnext
+   sudo git clone <INFRA_REPO_URL> /opt/upnext
    ```
 3. Run server setup scripts as a sudo-capable user:
    ```bash
