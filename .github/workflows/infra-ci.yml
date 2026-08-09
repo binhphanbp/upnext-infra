@@ -22,12 +22,14 @@ jobs:
           BACKEND_IMAGE_TAG: ci
           FRONTEND_STAGING_IMAGE_TAG: ci
           BACKEND_STAGING_IMAGE_TAG: ci
+          AI_STAGING_IMAGE_TAG: ci
           BESZEL_AGENT_KEY: ci
         run: |
           cp env/frontend.prod.env.example env/frontend.prod.env
           cp env/frontend.staging.env.example env/frontend.staging.env
           cp env/backend.prod.env.example env/backend.prod.env
           cp env/backend.staging.env.example env/backend.staging.env
+          cp env/ai.staging.env.example env/ai.staging.env
           cp env/postgres.prod.env.example env/postgres.prod.env
           cp env/postgres.staging.env.example env/postgres.staging.env
           cp env/n8n.env.example env/n8n.env

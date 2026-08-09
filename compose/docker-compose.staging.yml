@@ -59,6 +59,36 @@ services:
       retries: 5
       start_period: 60s
 
+  # Intentionally has no `ports:` entry and no Nginx route. Only services on
+  # the `upnext-staging` Docker network can call this private model adapter.
+  # Backend traffic is feature-flagged, so it can still use direct Gemini while
+  # this service is being rolled out or recovered.
+  ai-staging:
+    <<: *common
+    image: ghcr.io/${GITHUB_OWNER:?set GITHUB_OWNER}/upnext-ai:${AI_STAGING_IMAGE_TAG:-develop}
+    container_name: upnext-ai-staging
+    env_file:
+      - ../env/ai.staging.env
+    expose:
+      - "8000"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   postgres-staging:
     <<: *common
     image: postgres:16-alpine
