@@ -16,6 +16,8 @@ if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
   sudo chmod a+r /etc/apt/keyrings/docker.gpg
 fi
 
+# /etc/os-release is supplied by the target Ubuntu host, not this repository.
+# shellcheck disable=SC1091
 . /etc/os-release
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu ${VERSION_CODENAME} stable" | \
