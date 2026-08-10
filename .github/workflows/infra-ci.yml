@@ -35,6 +35,18 @@ jobs:
           cp env/n8n.env.example env/n8n.env
           docker compose -f compose/docker-compose.prod.yml config >/dev/null
           docker compose -f compose/docker-compose.staging.yml config >/dev/null
+          COMPOSE_PROFILES=ai docker compose -f compose/docker-compose.staging.yml config >/dev/null
+
+      - name: Verify private AI is opt-in
+        env:
+          GITHUB_OWNER: example
+          FRONTEND_STAGING_IMAGE_TAG: ci
+          BACKEND_STAGING_IMAGE_TAG: ci
+          AI_STAGING_IMAGE_TAG: ci
+          BESZEL_AGENT_KEY: ci
+        run: |
+          rm env/ai.staging.env
+          docker compose -f compose/docker-compose.staging.yml config >/dev/null
 
       - name: ShellCheck scripts
         run: |

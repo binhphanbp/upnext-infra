@@ -28,6 +28,8 @@ This repo contains infrastructure only. It must not contain FE/BE source code, r
    cp env/frontend.staging.env.example env/frontend.staging.env
    cp env/backend.prod.env.example env/backend.prod.env
    cp env/backend.staging.env.example env/backend.staging.env
+   # Create this only when preparing the private AI staging rollout.
+   cp env/ai.staging.env.example env/ai.staging.env
    cp env/postgres.prod.env.example env/postgres.prod.env
    cp env/postgres.staging.env.example env/postgres.staging.env
    cp env/n8n.env.example env/n8n.env
@@ -77,6 +79,7 @@ Backend deploy backs up PostgreSQL, pulls the image, runs `npx prisma migrate de
 Real env files on the VPS:
 - `env/frontend.prod.env`, `env/frontend.staging.env`
 - `env/backend.prod.env`, `env/backend.staging.env`
+- `env/ai.staging.env` only when the private `ai` Compose profile is enabled
 - `env/postgres.prod.env`, `env/postgres.staging.env`
 - `env/n8n.env`, `env/beszel.env`, `env/telegram.env`
 - `env/deploy.env`

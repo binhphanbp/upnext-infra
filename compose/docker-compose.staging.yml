@@ -65,10 +65,17 @@ services:
   # this service is being rolled out or recovered.
   ai-staging:
     <<: *common
+    # Opt-in until the VPS has a real ai.staging.env and the service has passed
+    # its private health checks. Existing frontend/backend deploys must stay
+    # unaffected after this infrastructure PR is merged.
+    profiles: ["ai"]
     image: ghcr.io/${GITHUB_OWNER:?set GITHUB_OWNER}/upnext-ai:${AI_STAGING_IMAGE_TAG:-develop}
     container_name: upnext-ai-staging
     env_file:
-      - ../env/ai.staging.env
+      # Docker Compose 2.24+ supports an optional env file. The profile keeps
+      # the service stopped until this file is intentionally provisioned.
+      - path: ../env/ai.staging.env
+        required: false
     expose:
       - "8000"
     deploy:
