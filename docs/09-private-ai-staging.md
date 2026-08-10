@@ -17,8 +17,8 @@ existing frontend or backend deployment paths.
 ```bash
 cd /opt/upnext
 set -a && source env/deploy.env && set +a
-COMPOSE_PROFILES=ai docker compose -f compose/docker-compose.staging.yml pull ai-staging
-COMPOSE_PROFILES=ai docker compose -f compose/docker-compose.staging.yml up -d ai-staging
+AI_STAGING_ENV_FILE=../env/ai.staging.env COMPOSE_PROFILES=ai docker compose -f compose/docker-compose.staging.yml pull ai-staging
+AI_STAGING_ENV_FILE=../env/ai.staging.env COMPOSE_PROFILES=ai docker compose -f compose/docker-compose.staging.yml up -d ai-staging
 docker inspect --format '{{.State.Health.Status}}' upnext-ai-staging
 ```
 
@@ -30,5 +30,5 @@ the backend remains stable should the backend flag be changed to `AI_LLM_PROVIDE
 Set `AI_LLM_PROVIDER=gemini` and restart only the backend. To stop the private service, run:
 
 ```bash
-COMPOSE_PROFILES=ai docker compose -f compose/docker-compose.staging.yml stop ai-staging
+AI_STAGING_ENV_FILE=../env/ai.staging.env COMPOSE_PROFILES=ai docker compose -f compose/docker-compose.staging.yml stop ai-staging
 ```

@@ -35,7 +35,7 @@ jobs:
           cp env/n8n.env.example env/n8n.env
           docker compose -f compose/docker-compose.prod.yml config >/dev/null
           docker compose -f compose/docker-compose.staging.yml config >/dev/null
-          COMPOSE_PROFILES=ai docker compose -f compose/docker-compose.staging.yml config >/dev/null
+          AI_STAGING_ENV_FILE=../env/ai.staging.env COMPOSE_PROFILES=ai docker compose -f compose/docker-compose.staging.yml config >/dev/null
 
       - name: Verify private AI is opt-in
         env:

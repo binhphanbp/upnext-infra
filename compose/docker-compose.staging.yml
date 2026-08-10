@@ -72,10 +72,10 @@ services:
     image: ghcr.io/${GITHUB_OWNER:?set GITHUB_OWNER}/upnext-ai:${AI_STAGING_IMAGE_TAG:-develop}
     container_name: upnext-ai-staging
     env_file:
-      # Docker Compose 2.24+ supports an optional env file. The profile keeps
-      # the service stopped until this file is intentionally provisioned.
-      - path: ../env/ai.staging.env
-        required: false
+      # The disabled fixture lets existing Compose versions parse this service
+      # before the real secret file is provisioned. The rollout command sets
+      # AI_STAGING_ENV_FILE=../env/ai.staging.env explicitly.
+      - ${AI_STAGING_ENV_FILE:-../env/ai.disabled.env}
     expose:
       - "8000"
     deploy:
