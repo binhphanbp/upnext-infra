@@ -1,4 +1,8 @@
-name: upnext-staging
+# Keep the Compose project identity used by the existing staging stack.  The
+# service names themselves carry the `-staging` suffix; changing this project
+# name would create a second network/volume namespace and disconnect a newly
+# deployed service from the running frontend, backend, and database.
+name: upnext
 
 x-logging: &default-logging
   driver: json-file
