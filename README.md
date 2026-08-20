@@ -132,3 +132,19 @@ scripts/deploy/rollback-backend.sh prod <previous-tag>
 - PostgreSQL is not published to the public internet.
 - App/admin services bind to `127.0.0.1` and are exposed through Nginx only.
 - n8n uses basic auth in `env/n8n.env`; Uptime Kuma and Beszel require setting admin accounts in their first-run UI.
+
+## Agent Tooling
+
+This repo declares the [Superpowers](https://github.com/obra/superpowers) Claude
+Code plugin in `.claude/settings.json`, but that file only records intent —
+Claude Code does not auto-install a plugin just because a repo declares it. After
+cloning, run once per machine:
+
+```bash
+claude plugin marketplace add obra/superpowers-marketplace
+claude plugin install superpowers@superpowers-marketplace --scope project
+```
+
+Skip this and `claude plugin list` will show the plugin as `failed to load` inside
+this repo. Not using Claude Code, or don't want the plugin? Nothing to do — it has
+no effect on the build or runtime.
