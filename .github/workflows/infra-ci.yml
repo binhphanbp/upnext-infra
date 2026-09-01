@@ -25,6 +25,7 @@ jobs:
           AI_STAGING_IMAGE_TAG: ci
           BESZEL_AGENT_KEY: ci
         run: |
+          cp env/compose.env.example .env
           cp env/frontend.prod.env.example env/frontend.prod.env
           cp env/frontend.staging.env.example env/frontend.staging.env
           cp env/backend.prod.env.example env/backend.prod.env
@@ -33,9 +34,9 @@ jobs:
           cp env/postgres.prod.env.example env/postgres.prod.env
           cp env/postgres.staging.env.example env/postgres.staging.env
           cp env/n8n.env.example env/n8n.env
-          docker compose -f compose/docker-compose.prod.yml config >/dev/null
-          docker compose -f compose/docker-compose.staging.yml config >/dev/null
-          AI_STAGING_ENV_FILE=../env/ai.staging.env COMPOSE_PROFILES=ai docker compose -f compose/docker-compose.staging.yml config >/dev/null
+          docker compose --project-name upnext --env-file .env -f compose/docker-compose.prod.yml config >/dev/null
+          docker compose --project-name upnext --env-file .env -f compose/docker-compose.staging.yml config >/dev/null
+          AI_STAGING_ENV_FILE=../env/ai.staging.env COMPOSE_PROFILES=ai docker compose --project-name upnext --env-file .env -f compose/docker-compose.staging.yml config >/dev/null
 
       - name: Verify private AI is opt-in
         env:
@@ -46,13 +47,19 @@ jobs:
           BESZEL_AGENT_KEY: ci
         run: |
           rm env/ai.staging.env
-          docker compose -f compose/docker-compose.staging.yml config >/dev/null
+          docker compose --project-name upnext --env-file .env -f compose/docker-compose.staging.yml config >/dev/null
 
       - name: ShellCheck scripts
         run: |
           sudo apt-get update
           sudo apt-get install -y shellcheck
           shellcheck scripts/**/*.sh postgres/initdb/*.sh
+
+      - name: Guard canonical deploy flow
+        run: |
+          test -x scripts/deploy/deploy.sh
+          test -f scripts/deploy/compose-runtime.sh
+          ! rg --fixed-strings -- '--remove-orphans' scripts/deploy
 
       - name: Nginx syntax
         run: |

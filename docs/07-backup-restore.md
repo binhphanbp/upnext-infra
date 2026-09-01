@@ -1,6 +1,8 @@
 # Backup and Restore
 
 Backup uses `pg_dump -Fc`, compresses with gzip, and stores files in `/opt/upnext/backups/postgres`.
+The script writes to a temporary file and publishes the backup only after a
+non-empty dump succeeds.
 
 Run backup:
 ```bash

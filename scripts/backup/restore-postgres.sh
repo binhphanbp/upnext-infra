@@ -46,8 +46,11 @@ if [[ -f "${ROOT_DIR}/env/deploy.env" ]]; then
   set +a
 fi
 
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/deploy/compose-runtime.sh"
+
 echo "Restoring ${BACKUP_FILE} into ${ENVIRONMENT} PostgreSQL"
-gzip -dc "$BACKUP_FILE" | docker compose -f "$COMPOSE_FILE" exec -T "$SERVICE" sh -c \
+gzip -dc "$BACKUP_FILE" | upnext_compose exec -T "$SERVICE" sh -c \
   'pg_restore --clean --if-exists --no-owner --no-privileges -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 
 echo "Restore completed."

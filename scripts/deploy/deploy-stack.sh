@@ -24,7 +24,12 @@ if [[ -f "${ROOT_DIR}/env/deploy.env" ]]; then
   set +a
 fi
 
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/deploy/compose-runtime.sh"
+
 echo "Starting ${ENVIRONMENT} stack with ${COMPOSE_FILE}"
-docker compose -f "$COMPOSE_FILE" pull
-docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
-docker compose -f "$COMPOSE_FILE" ps
+echo "This is a bootstrap/reconcile command, not the normal release path."
+echo "Use scripts/deploy/deploy.sh for frontend, backend, or AI releases."
+upnext_compose pull
+upnext_compose up -d
+upnext_compose ps

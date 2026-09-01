@@ -29,6 +29,10 @@ case "$ENVIRONMENT" in
 esac
 
 if [[ -z "$TARGET_TAG" ]]; then
+  if [[ ! -s "$STATE_FILE" ]]; then
+    echo "No saved frontend tag exists for ${ENVIRONMENT}; pass an explicit target tag." >&2
+    exit 1
+  fi
   TARGET_TAG="$(cat "$STATE_FILE")"
 fi
 
@@ -39,14 +43,17 @@ if [[ -f "${ROOT_DIR}/env/deploy.env" ]]; then
   set +a
 fi
 
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/deploy/compose-runtime.sh"
+
 if [[ -n "${GHCR_USERNAME:-}" && -n "${GHCR_TOKEN:-}" ]]; then
   echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 fi
 
 echo "Rolling back ${SERVICE} to ${TARGET_TAG}"
 export "$TAG_VAR=$TARGET_TAG"
-docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
-docker compose -f "$COMPOSE_FILE" up -d --no-deps "$SERVICE"
+upnext_compose pull "$SERVICE"
+upnext_compose up -d --no-deps "$SERVICE"
 "$HEALTHCHECK" "$HEALTH_URL" 20 3
 echo "$TARGET_TAG" > "$STATE_FILE"
 "$NOTIFY" "UpNext ${SERVICE} rolled back to ${TARGET_TAG}"

@@ -40,6 +40,9 @@ if [[ -f "${ROOT_DIR}/env/deploy.env" ]]; then
   set +a
 fi
 
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/deploy/compose-runtime.sh"
+
 if [[ -n "${GHCR_USERNAME:-}" && -n "${GHCR_TOKEN:-}" ]]; then
   echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 fi
@@ -54,12 +57,12 @@ echo "Backing up PostgreSQL before backend deploy"
 
 echo "Deploying ${SERVICE} tag ${NEW_TAG}"
 export "$TAG_VAR=$NEW_TAG"
-docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
+upnext_compose pull "$SERVICE"
 
 echo "Running migrations before replacing the running backend"
 "$MIGRATE" "$ENVIRONMENT"
 
-docker compose -f "$COMPOSE_FILE" up -d --no-deps "$SERVICE"
+upnext_compose up -d --no-deps "$SERVICE"
 
 if "$HEALTHCHECK" "$HEALTH_URL" 20 3; then
   echo "$NEW_TAG" > "$STATE_FILE"
@@ -73,8 +76,8 @@ echo "Deploy failed for ${SERVICE}" >&2
 if [[ -n "$PREVIOUS_TAG" ]]; then
   echo "Rolling back app container ${SERVICE} to ${PREVIOUS_TAG}; database restore is intentionally manual."
   export "$TAG_VAR=$PREVIOUS_TAG"
-  docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
-  docker compose -f "$COMPOSE_FILE" up -d --no-deps "$SERVICE"
+  upnext_compose pull "$SERVICE"
+  upnext_compose up -d --no-deps "$SERVICE"
   "$HEALTHCHECK" "$HEALTH_URL" 20 3
   "$NOTIFY" "UpNext ${SERVICE} app rolled back to ${PREVIOUS_TAG}. Review migrations manually."
 else

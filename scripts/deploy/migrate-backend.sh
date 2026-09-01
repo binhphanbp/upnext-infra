@@ -26,5 +26,8 @@ if [[ -f "${ROOT_DIR}/env/deploy.env" ]]; then
   set +a
 fi
 
+# shellcheck disable=SC1091
+source "${ROOT_DIR}/scripts/deploy/compose-runtime.sh"
+
 echo "Running Prisma migrations for ${SERVICE}"
-docker compose -f "$COMPOSE_FILE" run --rm "$SERVICE" npx prisma migrate deploy
+upnext_compose run --rm --no-deps "$SERVICE" npx --no-install prisma migrate deploy

@@ -41,12 +41,17 @@ This repo contains infrastructure only. It must not contain FE/BE source code, r
    ```bash
    nano env/deploy.env
    ```
-6. Start stacks:
+6. Create the Compose runtime file and preserve the current live project namespace:
+   ```bash
+   cp env/compose.env.example .env
+   nano .env
+   ```
+7. Bootstrap stacks only when provisioning or reconciling an environment:
    ```bash
    scripts/deploy/deploy-stack.sh prod
    scripts/deploy/deploy-stack.sh staging
    ```
-7. Issue SSL certificates after DNS resolves:
+8. Issue SSL certificates after DNS resolves:
    ```bash
    sudo certbot --nginx \
      -d upnext.works -d www.upnext.works \
@@ -60,19 +65,26 @@ This repo contains infrastructure only. It must not contain FE/BE source code, r
 
 ## Deploy
 
-Frontend:
+Routine release (the CI entry point) deploys exactly one service:
 ```bash
-scripts/deploy/deploy-frontend.sh prod <image-tag>
-scripts/deploy/deploy-frontend.sh staging <image-tag>
+scripts/deploy/deploy.sh staging backend
+scripts/deploy/deploy.sh staging frontend
+scripts/deploy/deploy.sh staging ai
 ```
 
-Backend:
+The corresponding GHCR image tag is read from `.env`. The backend path takes a
+database backup, runs Prisma migrations from the pulled image, recreates only
+the backend service, and checks the public health endpoint. Do not use
+`deploy-stack.sh` for routine releases.
+
+Tag-specific deploy and rollback commands remain available for controlled
+manual operations:
 ```bash
 scripts/deploy/deploy-backend.sh prod <image-tag>
 scripts/deploy/deploy-backend.sh staging <image-tag>
+scripts/deploy/deploy-frontend.sh prod <image-tag>
+scripts/deploy/deploy-frontend.sh staging <image-tag>
 ```
-
-Backend deploy backs up PostgreSQL, pulls the image, runs `npx prisma migrate deploy`, replaces the app container, checks health, and rolls back the app tag on failure. It does not restore the database automatically.
 
 ## Required Variables
 
@@ -83,6 +95,8 @@ Real env files on the VPS:
 - `env/postgres.prod.env`, `env/postgres.staging.env`
 - `env/n8n.env`, `env/beszel.env`, `env/telegram.env`
 - `env/deploy.env`
+- `.env`, created from `env/compose.env.example`; it holds Compose image tags
+  and the live `COMPOSE_PROJECT_NAME`
 
 Deploy shell variables:
 - `GITHUB_OWNER`

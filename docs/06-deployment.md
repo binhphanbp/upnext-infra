@@ -12,22 +12,30 @@ Staging branch mapping:
 
 Deploy frontend:
 ```bash
-scripts/deploy/deploy-frontend.sh prod <image-tag>
-scripts/deploy/deploy-frontend.sh staging <image-tag>
+scripts/deploy/deploy.sh staging frontend
 ```
 
 Deploy backend:
 ```bash
-scripts/deploy/deploy-backend.sh prod <image-tag>
-scripts/deploy/deploy-backend.sh staging <image-tag>
+scripts/deploy/deploy.sh staging backend
 ```
 
-Backend flow:
-1. Backup PostgreSQL.
-2. Pull new backend image.
-3. Run `npx prisma migrate deploy`.
-4. Replace backend container.
-5. Run healthcheck.
-6. Roll back app container if healthcheck fails.
+Deploy private AI staging only after `env/ai.staging.env` is provisioned:
+```bash
+scripts/deploy/deploy.sh staging ai
+```
 
-Database restore is manual by design.
+The canonical script reads tags and the current Compose project identity from
+`/opt/upnext/.env`, deploys only the selected service, and never uses
+`--remove-orphans`. GitHub Actions in the frontend/backend repos call this
+script directly.
+
+Backend flow:
+1. Create and verify a PostgreSQL backup.
+2. Pull the configured backend image.
+3. Run `npx --no-install prisma migrate deploy` from that image.
+4. Replace only the backend container.
+5. Run the public healthcheck.
+
+Database restore is manual by design. `deploy-stack.sh` is only for initial
+provisioning or an explicit full-stack reconcile, never for a routine release.

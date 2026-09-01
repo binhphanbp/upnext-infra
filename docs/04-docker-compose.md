@@ -2,17 +2,20 @@
 
 Production:
 ```bash
-set -a; source env/deploy.env; set +a
-docker compose -f compose/docker-compose.prod.yml config
-docker compose -f compose/docker-compose.prod.yml up -d
+docker compose --project-name upnext --env-file .env -f compose/docker-compose.prod.yml config
+docker compose --project-name upnext --env-file .env -f compose/docker-compose.prod.yml up -d
 ```
 
 Staging:
 ```bash
-set -a; source env/deploy.env; set +a
-docker compose -f compose/docker-compose.staging.yml config
-docker compose -f compose/docker-compose.staging.yml up -d
+docker compose --project-name upnext --env-file .env -f compose/docker-compose.staging.yml config
+docker compose --project-name upnext --env-file .env -f compose/docker-compose.staging.yml up -d
 ```
+
+Create `.env` from `env/compose.env.example`. On the current VPS it must retain
+`COMPOSE_PROJECT_NAME=upnext`; changing it would create a second namespace
+instead of managing the running containers. Do not pass `--remove-orphans` when
+production and staging share that project namespace.
 
 Required variables in `env/deploy.env`:
 - `GITHUB_OWNER`

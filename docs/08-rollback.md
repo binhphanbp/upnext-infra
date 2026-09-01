@@ -1,5 +1,9 @@
 # Rollback
 
+All rollback commands use `/opt/upnext/.env` and the live Compose project
+namespace. Do not run raw `docker compose` commands without the same
+`--project-name upnext --env-file .env` arguments on the current VPS.
+
 Frontend rollback:
 ```bash
 scripts/deploy/rollback-frontend.sh prod <previous-tag>

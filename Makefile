@@ -4,8 +4,9 @@ ENV ?= prod
 .PHONY: validate up down ps logs backup cleanup nginx-test
 
 validate:
-	set -a; [ -f env/deploy.env ] && . env/deploy.env; set +a; docker compose -f compose/docker-compose.prod.yml config >/dev/null
-	set -a; [ -f env/deploy.env ] && . env/deploy.env; set +a; docker compose -f compose/docker-compose.staging.yml config >/dev/null
+	test -r .env
+	docker compose --project-name upnext --env-file .env -f compose/docker-compose.prod.yml config >/dev/null
+	docker compose --project-name upnext --env-file .env -f compose/docker-compose.staging.yml config >/dev/null
 
 up:
 	./scripts/deploy/deploy-stack.sh $(ENV)
