@@ -74,6 +74,31 @@ database backup, runs Prisma migrations from the pulled image, recreates only
 the backend service, and checks the public health endpoint. Do not use
 `deploy-stack.sh` for routine releases.
 
+## pgvector / Candidate Assistant RAG rollout
+
+Candidate Assistant RAG is not enabled merely by merging backend code. The
+database must first provide the `vector` extension. The compose files pin
+PostgreSQL 16 with `pgvector/pgvector:0.8.1-pg16-bookworm`, retaining the same
+PostgreSQL-major data volume. Roll it out in this order: staging engine,
+staging backend migration, staging acceptance tests, then production in an
+approved change window.
+
+```bash
+# Takes a backup, recreates only PostgreSQL, and verifies extension capability.
+# It deliberately does not create application schema.
+CONFIRM_ENABLE_PGVECTOR=enable-pgvector \
+  scripts/maintenance/enable-pgvector.sh staging
+
+# Deploy the backend release containing the RAG migration.
+scripts/deploy/deploy.sh staging backend
+
+# Verify the extension is now installed by that migration.
+scripts/deploy/verify-pgvector.sh staging --require-installed
+```
+
+Repeat for production only after staging release gates pass. JSON-vector
+fallback is not a production RAG substitute.
+
 ## Retire legacy monitoring
 
 Uptime Kuma and Beszel are no longer operated. After this change is deployed,

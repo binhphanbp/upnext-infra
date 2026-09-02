@@ -61,7 +61,9 @@ services:
 
   postgres:
     <<: *common
-    image: postgres:16-alpine
+    # Keep PostgreSQL 16 for data-volume compatibility; pgvector is required
+    # by the Candidate Assistant retrieval platform.
+    image: pgvector/pgvector:0.8.1-pg16-bookworm
     container_name: upnext-postgres
     env_file:
       - ../env/postgres.prod.env
