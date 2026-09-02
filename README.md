@@ -1,13 +1,13 @@
 # UpNext Infrastructure
 
-Production/staging infrastructure for `upnext.works` on Ubuntu 24.04 LTS using Docker Compose, host Nginx, Let's Encrypt, GHCR images, PostgreSQL, n8n, Uptime Kuma, Beszel, backups, rollback scripts, and Telegram notifications.
+Production/staging infrastructure for `upnext.works` on Ubuntu 24.04 LTS using Docker Compose, host Nginx, Let's Encrypt, GHCR images, PostgreSQL, n8n, backups, rollback scripts, health checks, and optional Telegram deploy notifications.
 
 This repo contains infrastructure only. It must not contain FE/BE source code, real `.env` files, passwords, tokens, private keys, JWT secrets, database dumps, or logs.
 
 ## Quick Start
 
 1. Point DNS records on Name.com to `<VPS_PUBLIC_IP>`:
-   `upnext.works`, `www`, `api`, `n8n`, `status`, `monitor`, `staging`, `api-staging`.
+   `upnext.works`, `www`, `api`, `n8n`, `staging`, `api-staging`.
 2. Clone this repo on the VPS:
    ```bash
    sudo mkdir -p /opt/upnext
@@ -33,7 +33,6 @@ This repo contains infrastructure only. It must not contain FE/BE source code, r
    cp env/postgres.prod.env.example env/postgres.prod.env
    cp env/postgres.staging.env.example env/postgres.staging.env
    cp env/n8n.env.example env/n8n.env
-   cp env/beszel.env.example env/beszel.env
    cp env/telegram.env.example env/telegram.env
    cp env/deploy.env.example env/deploy.env
    ```
@@ -57,8 +56,6 @@ This repo contains infrastructure only. It must not contain FE/BE source code, r
      -d upnext.works -d www.upnext.works \
      -d api.upnext.works \
      -d n8n.upnext.works \
-     -d status.upnext.works \
-     -d monitor.upnext.works \
      -d staging.upnext.works \
      -d api-staging.upnext.works
    ```
@@ -77,6 +74,20 @@ database backup, runs Prisma migrations from the pulled image, recreates only
 the backend service, and checks the public health endpoint. Do not use
 `deploy-stack.sh` for routine releases.
 
+## Retire legacy monitoring
+
+Uptime Kuma and Beszel are no longer operated. After this change is deployed,
+remove their stopped/running containers, data volumes, and Nginx routes once:
+
+```bash
+CONFIRM_RETIRE_MONITORING=retire-unused-monitoring \
+  scripts/maintenance/retire-unused-monitoring.sh
+```
+
+The command has an explicit confirmation because it permanently removes only
+the legacy monitoring data. DNS records and old TLS certificates can be left to
+expire or removed separately after confirming nothing uses them.
+
 Tag-specific deploy and rollback commands remain available for controlled
 manual operations:
 ```bash
@@ -93,7 +104,7 @@ Real env files on the VPS:
 - `env/backend.prod.env`, `env/backend.staging.env`
 - `env/ai.staging.env` only when the private `ai` Compose profile is enabled
 - `env/postgres.prod.env`, `env/postgres.staging.env`
-- `env/n8n.env`, `env/beszel.env`, `env/telegram.env`
+- `env/n8n.env`, `env/telegram.env`
 - `env/deploy.env`
 - `.env`, created from `env/compose.env.example`; it holds Compose image tags
   and the live `COMPOSE_PROJECT_NAME`
@@ -103,7 +114,6 @@ Deploy shell variables:
 - `FRONTEND_IMAGE_TAG`, `BACKEND_IMAGE_TAG`
 - `FRONTEND_STAGING_IMAGE_TAG`, `BACKEND_STAGING_IMAGE_TAG`
 - `GHCR_USERNAME`, `GHCR_TOKEN` if GHCR images are private
-- `BESZEL_AGENT_KEY`
 
 GitHub Actions secrets for FE/BE repos:
 - `VPS_HOST`
@@ -145,7 +155,7 @@ scripts/deploy/rollback-backend.sh prod <previous-tag>
 - Use the `deploy` user, not root, for deployments.
 - PostgreSQL is not published to the public internet.
 - App/admin services bind to `127.0.0.1` and are exposed through Nginx only.
-- n8n uses basic auth in `env/n8n.env`; Uptime Kuma and Beszel require setting admin accounts in their first-run UI.
+- n8n uses basic auth in `env/n8n.env`. Application availability is checked by the deployment health checks and the operational commands in `docs/09-monitoring-alerting.md`.
 
 ## Agent Tooling
 

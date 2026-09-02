@@ -31,6 +31,8 @@ if [[ -f "${ROOT_DIR}/env/deploy.env" ]]; then
   set +a
 fi
 
+# compose-runtime consumes the selected stack file.
+export COMPOSE_FILE
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/deploy/compose-runtime.sh"
 
@@ -40,6 +42,9 @@ TEMP_FILE="$(mktemp "${BACKUP_DIR}/.${PREFIX}-${TIMESTAMP}.XXXXXX")"
 trap 'rm -f "$TEMP_FILE"' EXIT
 
 echo "Creating PostgreSQL backup: ${OUT_FILE}"
+# The PostgreSQL variables must be expanded by `sh` inside the container, not
+# by the deployment host.
+# shellcheck disable=SC2016
 upnext_compose exec -T "$SERVICE" sh -c \
   'pg_dump -Fc -U "$POSTGRES_USER" "$POSTGRES_DB"' | gzip -9 > "$TEMP_FILE"
 

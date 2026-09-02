@@ -40,6 +40,8 @@ if [[ -f "${ROOT_DIR}/env/deploy.env" ]]; then
   set +a
 fi
 
+# compose-runtime consumes the selected stack file.
+export COMPOSE_FILE
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/deploy/compose-runtime.sh"
 

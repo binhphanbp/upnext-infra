@@ -2,18 +2,17 @@
 
 ## App Down
 
-1. Check Uptime Kuma alert details.
-2. Check Nginx:
+1. Check Nginx:
    ```bash
    sudo nginx -t
    sudo journalctl -u nginx -n 100 --no-pager
    ```
-3. Check containers:
+2. Check containers:
    ```bash
    docker compose -f compose/docker-compose.prod.yml ps
    docker compose -f compose/docker-compose.prod.yml logs --tail=200 frontend backend
    ```
-4. Roll back the affected app if the last deploy caused it.
+3. Roll back the affected app if the last deploy caused it.
 
 ## Backend Migration Fail
 
@@ -58,10 +57,9 @@
 
 ## High CPU or RAM
 
-1. Check Beszel dashboard.
-2. Check Docker stats:
+1. Check Docker stats:
    ```bash
    docker stats
    ```
-3. Identify noisy service.
-4. Scale VPS resources or reduce workload if sustained.
+2. Identify noisy service.
+3. Scale VPS resources or reduce workload if sustained.

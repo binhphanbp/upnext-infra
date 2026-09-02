@@ -23,7 +23,6 @@ jobs:
           FRONTEND_STAGING_IMAGE_TAG: ci
           BACKEND_STAGING_IMAGE_TAG: ci
           AI_STAGING_IMAGE_TAG: ci
-          BESZEL_AGENT_KEY: ci
         run: |
           cp env/compose.env.example .env
           cp env/frontend.prod.env.example env/frontend.prod.env
@@ -44,7 +43,6 @@ jobs:
           FRONTEND_STAGING_IMAGE_TAG: ci
           BACKEND_STAGING_IMAGE_TAG: ci
           AI_STAGING_IMAGE_TAG: ci
-          BESZEL_AGENT_KEY: ci
         run: |
           rm env/ai.staging.env
           docker compose --project-name upnext --env-file .env -f compose/docker-compose.staging.yml config >/dev/null
@@ -60,6 +58,10 @@ jobs:
           test -x scripts/deploy/deploy.sh
           test -f scripts/deploy/compose-runtime.sh
           ! rg --fixed-strings -- '--remove-orphans' scripts/deploy
+
+      - name: Guard removed monitoring services
+        run: |
+          ! rg -i 'uptime-kuma|beszel' compose env nginx/conf.d
 
       - name: Nginx syntax
         run: |

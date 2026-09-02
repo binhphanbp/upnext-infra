@@ -23,6 +23,5 @@ Required variables in `env/deploy.env`:
 - `BACKEND_IMAGE_TAG`
 - `FRONTEND_STAGING_IMAGE_TAG`
 - `BACKEND_STAGING_IMAGE_TAG`
-- `BESZEL_AGENT_KEY`
 
 Internal ports are bound to `127.0.0.1`; PostgreSQL has no host port mapping.

@@ -6,8 +6,6 @@ Create A records pointing to `<VPS_PUBLIC_IP>`:
 - `www`
 - `api`
 - `n8n`
-- `status`
-- `monitor`
 - `staging`
 - `api-staging`
 
