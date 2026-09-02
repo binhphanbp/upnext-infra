@@ -96,8 +96,20 @@ case "$COMPONENT" in
 
     echo "Recreating ai-staging only"
     upnext_compose --profile ai up -d --no-deps --force-recreate ai-staging
-    upnext_compose --profile ai exec -T ai-staging \
-      python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=5)"
+    # Uvicorn starts after Compose reports the container as started. A single immediate request
+    # races that startup and used to make a successful AI deployment look failed.
+    for attempt in $(seq 1 20); do
+      if upnext_compose --profile ai exec -T ai-staging \
+        python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=5)"; then
+        break
+      fi
+      if [[ "$attempt" == "20" ]]; then
+        echo "ai-staging did not become ready after 20 attempts" >&2
+        exit 1
+      fi
+      echo "AI readiness attempt ${attempt}/20 failed; retrying in 3s"
+      sleep 3
+    done
     ;;
 esac
 
