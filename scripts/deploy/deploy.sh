@@ -61,6 +61,8 @@ if [[ "$COMPONENT" == "ai" && -f "${ROOT_DIR}/env/ai.staging.env" ]]; then
   export AI_STAGING_ENV_FILE="${AI_STAGING_ENV_FILE:-../env/ai.staging.env}"
 fi
 
+# compose-runtime consumes the selected stack file.
+export COMPOSE_FILE
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/deploy/compose-runtime.sh"
 

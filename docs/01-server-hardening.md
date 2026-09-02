@@ -33,4 +33,4 @@ Only these inbound ports should be open:
 - `80/tcp`
 - `443/tcp`
 
-PostgreSQL, app ports, n8n, Uptime Kuma, and Beszel must not be public.
+PostgreSQL, app ports, and n8n must not be public.

@@ -46,10 +46,15 @@ if [[ -f "${ROOT_DIR}/env/deploy.env" ]]; then
   set +a
 fi
 
+# compose-runtime consumes the selected stack file.
+export COMPOSE_FILE
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/deploy/compose-runtime.sh"
 
 echo "Restoring ${BACKUP_FILE} into ${ENVIRONMENT} PostgreSQL"
+# The PostgreSQL variables must be expanded by `sh` inside the container, not
+# by the deployment host.
+# shellcheck disable=SC2016
 gzip -dc "$BACKUP_FILE" | upnext_compose exec -T "$SERVICE" sh -c \
   'pg_restore --clean --if-exists --no-owner --no-privileges -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 

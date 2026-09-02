@@ -19,8 +19,6 @@ sudo certbot --nginx \
   -d upnext.works -d www.upnext.works \
   -d api.upnext.works \
   -d n8n.upnext.works \
-  -d status.upnext.works \
-  -d monitor.upnext.works \
   -d staging.upnext.works \
   -d api-staging.upnext.works
 ```
