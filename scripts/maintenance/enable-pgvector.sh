@@ -33,6 +33,8 @@ echo "Recreating ${SERVICE} only; its existing PostgreSQL 16 volume is retained"
 upnext_compose up -d --no-deps --force-recreate "$SERVICE"
 
 for attempt in $(seq 1 20); do
+  # POSTGRES_* must expand inside the database container, not on the host.
+  # shellcheck disable=SC2016
   if upnext_compose exec -T "$SERVICE" sh -ec 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'; then
     "${ROOT_DIR}/scripts/deploy/verify-pgvector.sh" "$ENVIRONMENT"
     echo "pgvector engine capability rollout completed for ${ENVIRONMENT}."

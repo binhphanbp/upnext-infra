@@ -23,6 +23,8 @@ export COMPOSE_FILE
 # shellcheck disable=SC1091
 source "${ROOT_DIR}/scripts/deploy/compose-runtime.sh"
 
+# POSTGRES_* must expand inside the database container, not on the host.
+# shellcheck disable=SC2016
 if ! upnext_compose exec -T "$SERVICE" sh -ec \
   'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT 1 FROM pg_available_extensions WHERE name = '\''vector'\''"' \
   | grep -qx '1'; then
@@ -30,6 +32,8 @@ if ! upnext_compose exec -T "$SERVICE" sh -ec \
   exit 1
 fi
 
+# POSTGRES_* must expand inside the database container, not on the host.
+# shellcheck disable=SC2016
 if [[ "$REQUIRE_INSTALLED" == "--require-installed" ]] && ! upnext_compose exec -T "$SERVICE" sh -ec \
   'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT 1 FROM pg_extension WHERE extname = '\''vector'\''"' \
   | grep -qx '1'; then
